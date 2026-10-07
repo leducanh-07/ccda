@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DBMS & SQL Mastery - Interactive Database Review & Learning Platform with 260 questions covering DBMS Architecture, DDL, DML, SQL Joins, Subqueries, Normalization and more.">
+    <meta name="keywords" content="DBMS, SQL, Database, Quiz, Oracle, Learning, Review, Flashcards, Normalization, Joins, Subqueries">
+    <meta name="author" content="CCDA Learning Platform">
+    <meta property="og:title" content="DBMS & SQL Mastery — Interactive Review Platform">
+    <meta property="og:description" content="Master Database Management Systems & SQL with 260 expertly curated questions, smart error tracking, flashcards, and adaptive retake modes.">
+    <meta property="og:type" content="website">
+    <title>DBMS & SQL Mastery — Interactive Review Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo" onclick="showDashboard()">
+                <span class="logo-icon">⬡</span>
+                <span class="logo-text">DBMS<span class="accent">Mastery</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="#" class="nav-link active" data-page="dashboard" onclick="showDashboard()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-link" data-page="quiz" onclick="showModuleSelect()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                    Quiz Mode
+                </a>
+                <a href="#" class="nav-link" data-page="flashcards" onclick="showFlashcards()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 4v16"/></svg>
+                    Flashcards
+                </a>
+                <a href="#" class="nav-link" data-page="mistakes" onclick="showMistakes()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    Review Mistakes
+                    <span class="mistake-badge" id="mistakeBadge" style="display:none">0</span>
+                </a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
+                <button class="hamburger" id="hamburger" onclick="toggleMobile()" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- DASHBOARD PAGE -->
+        <section class="page active" id="pageDashboard">
+            <div class="dashboard">
+                <header class="dash-header">
+                    <div class="dash-header-text">
+                        <h1 class="dash-title">Database <span class="accent">Mastery</span> Hub</h1>
+                        <p class="dash-subtitle">Master DBMS & SQL with 260 expertly curated questions across 13 modules</p>
+                    </div>
+                    <div class="dash-stats-row" id="dashStats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="statTotal">260</div>
+                            <div class="stat-label">Total Questions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="statAttempted">0</div>
+                            <div class="stat-label">Attempted</div>
+                        </div>
+                        <div class="stat-card accent-card">
+                            <div class="stat-number" id="statCorrect">0%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="statMistakes">0</div>
+                            <div class="stat-label">Mistakes</div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="quick-actions">
+                    <h2 class="section-title">Quick Actions</h2>
+                    <div class="action-grid">
+                        <button class="action-card" onclick="startFullQuiz()">
+                            <div class="action-icon">🚀</div>
+                            <div class="action-title">Full Quiz</div>
+                            <div class="action-desc">All 260 questions randomized</div>
+                        </button>
+                        <button class="action-card" onclick="showMistakes()">
+                            <div class="action-icon">🔄</div>
+                            <div class="action-title">Retake Mistakes</div>
+                            <div class="action-desc">Practice your weak areas</div>
+                        </button>
+                        <button class="action-card" onclick="showFlashcards()">
+                            <div class="action-icon">🃏</div>
+                            <div class="action-title">Flashcards</div>
+                            <div class="action-desc">Interactive concept cards</div>
+                        </button>
+                        <button class="action-card" onclick="startRandomQuiz(20)">
+                            <div class="action-icon">🎯</div>
+                            <div class="action-title">Quick 20</div>
+                            <div class="action-desc">20 random questions</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modules-section">
+                    <h2 class="section-title">Modules</h2>
+                    <div class="module-grid" id="moduleGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <h2 class="section-title">Progress Overview</h2>
+                    <div class="progress-grid" id="progressGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE SELECT PAGE -->
+        <section class="page" id="pageModuleSelect">
+            <div class="module-select-container">
+                <h1 class="page-title">Select a Module</h1>
+                <p class="page-subtitle">Choose a topic to begin your quiz</p>
+                <div class="module-select-grid" id="moduleSelectGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- QUIZ PAGE -->
+        <section class="page" id="pageQuiz">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <div class="quiz-info">
+                        <span class="quiz-module-name" id="quizModuleName">Module</span>
+                        <span class="quiz-progress-text" id="quizProgressText">1 / 20</span>
+                    </div>
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div>
+                    </div>
+                    <div class="quiz-timer" id="quizTimer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span id="timerDisplay">00:00</span>
+                    </div>
+                </div>
+
+                <div class="quiz-body">
+                    <div class="question-card" id="questionCard">
+                        <div class="question-number" id="questionNumber">Q1</div>
+                        <div class="question-text" id="questionText"></div>
+                        <div class="options-list" id="optionsList"></div>
+                    </div>
+
+                    <div class="explanation-card hidden" id="explanationCard">
+                        <div class="explanation-header">
+                            <span class="explanation-icon" id="explanationIcon">✓</span>
+                            <span class="explanation-title" id="explanationTitle">Correct!</span>
+                        </div>
+                        <div class="explanation-body">
+                            <div class="correct-answer-display" id="correctAnswerDisplay"></div>
+                            <p class="explanation-text" id="explanationText"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quiz-footer">
+                    <button class="btn btn-secondary" onclick="quitQuiz()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quit
+                    </button>
+                    <button class="btn btn-primary hidden" id="btnNext" onclick="nextQuestion()">
+                        Next
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESULTS PAGE -->
+        <section class="page" id="pageResults">
+            <div class="results-container">
+                <div class="results-header">
+                    <div class="results-score-ring" id="resultsScoreRing">
+                        <svg viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border)" stroke-width="8"/>
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="8" stroke-dasharray="339.29" stroke-dashoffset="339.29" stroke-linecap="round" id="scoreCircle" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="score-center">
+                            <div class="score-percent" id="scorePercent">0%</div>
+                            <div class="score-label">Score</div>
+                        </div>
+                    </div>
+                    <h1 class="results-title" id="resultsTitle">Quiz Complete!</h1>
+                    <div class="results-stats">
+                        <div class="result-stat">
+                            <span class="result-stat-val" id="resultCorrect">0</span>
+                            <span class="result-stat-label">Correct</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="result-stat-val" id="resultWrong">0</span>
+                            <span class="result-stat-label">Wrong</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="result-stat-val" id="resultTime">00:00</span>
+                            <span class="result-stat-label">Time</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="results-actions">
+                    <button class="btn btn-primary" onclick="retakeMistakes()">Retake Mistakes</button>
+                    <button class="btn btn-secondary" onclick="showDashboard()">Dashboard</button>
+                    <button class="btn btn-ghost" onclick="reviewAnswers()">Review All Answers</button>
+                </div>
+                <div class="results-review hidden" id="resultsReview">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- FLASHCARDS PAGE -->
+        <section class="page" id="pageFlashcards">
+            <div class="flashcards-container">
+                <h1 class="page-title">DBMS & SQL <span class="accent">Flashcards</span></h1>
+                <p class="page-subtitle">Click a card to reveal the answer</p>
+                
+                <div class="flashcard-controls">
+                    <select id="flashcardModuleFilter" onchange="filterFlashcards()">
+                        <option value="all">All Modules</option>
+                    </select>
+                    <button class="btn btn-ghost" onclick="shuffleFlashcards()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                        Shuffle
+                    </button>
+                </div>
+
+                <div class="flashcard-viewer">
+                    <div class="flashcard" id="flashcard" onclick="flipCard()">
+                        <div class="flashcard-inner" id="flashcardInner">
+                            <div class="flashcard-front">
+                                <div class="flashcard-badge">Question</div>
+                                <div class="flashcard-content" id="flashcardFront"></div>
+                                <div class="flashcard-hint">Click to reveal answer</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="flashcard-badge answer-badge">Answer</div>
+                                <div class="flashcard-content" id="flashcardBack"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flashcard-nav">
+                        <button class="btn btn-icon" onclick="prevFlashcard()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        </button>
+                        <span class="flashcard-counter" id="flashcardCounter">1 / 260</span>
+                        <button class="btn btn-icon" onclick="nextFlashcard()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MISTAKES PAGE -->
+        <section class="page" id="pageMistakes">
+            <div class="mistakes-container">
+                <div class="mistakes-header">
+                    <h1 class="page-title">Review <span class="accent">Mistakes</span></h1>
+                    <p class="page-subtitle" id="mistakesSubtitle">Review your incorrectly answered questions</p>
+                    <div class="mistakes-actions">
+                        <button class="btn btn-primary" onclick="retakeMistakesQuiz()" id="btnRetakeMistakes">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                            Retake All Mistakes
+                        </button>
+                        <button class="btn btn-ghost" onclick="clearMistakes()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+                <div class="mistakes-list" id="mistakesList">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="empty-state hidden" id="noMistakes">
+                    <div class="empty-icon">🎉</div>
+                    <h3>No Mistakes Yet!</h3>
+                    <p>Start a quiz to track your progress</p>
+                    <button class="btn btn-primary" onclick="showModuleSelect()">Start Quiz</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
