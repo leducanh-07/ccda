@@ -94,9 +94,9 @@
 [data-theme="light"] {
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
+  --bg-tertiary: #f4f6f9; /* Light gray for option background */
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
+  --bg-card-hover: #f1f5f9;
   --bg-elevated: #ffffff;
   --bg-input: #f1f5f9;
   
@@ -105,13 +105,13 @@
   --text-tertiary: #94a3b8;
   --text-inverse: #f8fafc;
   
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
+  --border: #d1d5db;
+  --border-hover: #9ca3af;
   --border-focus: #6366f1;
   
   --accent: #6366f1;
   --accent-hover: #4f46e5;
-  --accent-soft: rgba(99, 102, 241, 0.1);
+  --accent-soft: #eef2ff; /* Pill background */
   --accent-glow: rgba(99, 102, 241, 0.25);
   
   --success: #16a34a;
@@ -123,17 +123,17 @@
   --info: #2563eb;
   --info-soft: rgba(37, 99, 235, 0.1);
   
-  --code-bg: #f6f8fa;
-  --code-border: #d0d7de;
-  --code-line-num: #8b949e;
-  --code-keyword: #cf222e;
+  --code-bg: #ffffff; /* White background for SQL block */
+  --code-border: #d1d5db; /* Thin gray border */
+  --code-line-num: #9ca3af; /* Gray line numbers */
+  --code-keyword: #c82c41; /* Crimson red for keywords */
   --code-function: #8250df;
   --code-string: #0a3069;
   --code-number: #0550ae;
-  --code-operator: #cf222e;
+  --code-operator: #c82c41;
   --code-comment: #6e7781;
-  --code-default: #24292f;
-  --code-badge-bg: #0550ae;
+  --code-default: #374151; /* Dark gray for standard code text */
+  --code-badge-bg: #155eab; /* Dark blue badge */
   --code-badge-text: #ffffff;
 
   --nav-bg: rgba(248, 250, 252, 0.85);
@@ -736,8 +736,7 @@ body {
 /* --- Question Card --- */
 .question-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: none;
   padding: var(--space-8);
   margin-bottom: var(--space-4);
   animation: slideUp 0.35s ease;
@@ -750,8 +749,8 @@ body {
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 700;
-  font-size: 0.8rem;
-  padding: var(--space-1) var(--space-3);
+  font-size: 0.9rem;
+  padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-full);
   margin-bottom: var(--space-4);
 }
@@ -770,11 +769,13 @@ body {
   background: var(--code-bg);
   border: 1px solid var(--code-border);
   border-radius: var(--radius-md);
-  margin: var(--space-4) 0;
+  margin-top: 0;
+  margin-bottom: var(--space-2);
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   line-height: 1.7;
+  width: 100%;
 }
 
 .sql-code-badge {
@@ -783,9 +784,9 @@ body {
   left: 0;
   background: var(--code-badge-bg);
   color: var(--code-badge-text);
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 0 0 var(--radius-sm) 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -809,7 +810,7 @@ body {
   min-width: 2.5em;
   padding-right: var(--space-4);
   flex-shrink: 0;
-  border-right: 1px solid var(--code-border);
+  border-right: 1px solid #fca5a5; /* Thin red/pink vertical line */
   margin-right: var(--space-4);
 }
 
@@ -831,17 +832,17 @@ body {
 .options-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .option-btn {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  gap: var(--space-5);
+  padding: var(--space-5);
   background: var(--bg-tertiary);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: left;
@@ -853,9 +854,9 @@ body {
 }
 
 .option-btn:hover:not(.disabled) {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  transform: translateX(4px);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
 }
 
 .option-btn.disabled {
@@ -873,7 +874,7 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   flex-shrink: 0;
   transition: all var(--transition-fast);
@@ -883,6 +884,7 @@ body {
   flex: 1;
   padding-top: 4px;
 }
+
 
 /* Option States */
 .option-btn.correct {

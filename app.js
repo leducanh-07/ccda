@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── Theme ─────────────────────────────────────
 function loadTheme() {
-  const saved = localStorage.getItem('dbms-theme') || 'dark';
+  const saved = localStorage.getItem('dbms-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
 }
 
@@ -666,34 +666,48 @@ function createSQLBlock(code) {
   `;
 }
 
-function formatQuestionText(text) {
-  // Extract SQL statements from the question text
-  const sqlPatterns = [
-    /(?:SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRUNCATE|MERGE|WITH)\s+[\s\S]*?(?:;|FROM\s+\w+[\s\S]*?(?:;|$))/gi
+function beautifySQL(sql) {
+  // Replace multiple spaces with a single space
+  let formatted = sql.replace(/\s+/g, ' ').trim();
+  
+  // Define keywords to break on
+  const breaks = [
+    'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 'HAVING',
+    'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 'FULL OUTER JOIN', 'INNER JOIN', 'CROSS JOIN', 'NATURAL JOIN', 'JOIN',
+    'UNION ALL', 'UNION', 'INTERSECT', 'MINUS', 'SET'
   ];
   
+  // Add newlines before major clauses
+  breaks.forEach(keyword => {
+    const regex = new RegExp(`\\b(${keyword})\\b`, 'gi');
+    formatted = formatted.replace(regex, '\n$1');
+  });
+  
+  return formatted;
+}
+
+function formatQuestionText(text) {
   let formatted = escapeHTML(text);
   
   // Find SQL-like code in the text
   const sqlRegex = /((?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|TRUNCATE\s+TABLE|MERGE\s+INTO)\s+[^.]*?;?(?=\s*(?:How|What|Which|Why|For|The|You|This|Evaluate|Examine|$)))/gi;
   
   const matches = text.match(sqlRegex);
-  
   if (matches && matches.length > 0) {
     matches.forEach(match => {
       const escapedMatch = escapeHTML(match);
-      const sqlBlock = createSQLBlock(match.trim());
+      const beautified = beautifySQL(match);
+      const sqlBlock = createSQLBlock(beautified);
       formatted = formatted.replace(escapedMatch, sqlBlock);
     });
   }
   
-  // Also format inline SQL code (backtick-style or short SQL snippets)
+  // Also format inline SQL code
   formatted = formatted.replace(
-    /(?<!<[^>]*)(\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM|CREATE TABLE|ALTER TABLE|DROP TABLE)\b\s+\S+(?:\s+\S+){0,20}?;)/gi,
+    /(?<!<[^>]*)(\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM|CREATE TABLE|ALTER TABLE|DROP TABLE)\b\s+\S+(?:\s+\S+){0,40}?;)/gi,
     (match) => {
-      // Skip if already inside a code block
       if (match.includes('sql-code-block')) return match;
-      return createSQLBlock(match);
+      return createSQLBlock(beautifySQL(match));
     }
   );
   
@@ -701,12 +715,11 @@ function formatQuestionText(text) {
 }
 
 function formatOptionText(text) {
-  // Check if the option text looks like SQL
   const sqlStarters = ['SELECT ', 'INSERT ', 'UPDATE ', 'DELETE ', 'CREATE ', 'ALTER ', 'DROP ', 'TRUNCATE ', 'MERGE '];
   const startsWithSQL = sqlStarters.some(s => text.trim().toUpperCase().startsWith(s));
   
-  if (startsWithSQL && text.length > 20) {
-    return createSQLBlock(text.trim());
+  if (startsWithSQL && text.length > 15) {
+    return createSQLBlock(beautifySQL(text));
   }
   
   return escapeHTML(text);

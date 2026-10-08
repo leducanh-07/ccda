@@ -2188,7 +2188,7 @@ const QUESTIONS = [
   {
     "id": 142,
     "module": 8,
-    "question": "What will be the output of the following query? SELECT * FROM employees, departments;",
+    "question": "What will be the output of the following query? SELECT * \nFROM employees, departments;",
     "options": [
       "It will display rows from employees table followed by rows from departments table.",
       "It will by default the join two tables on department_id because it is a referential integrity column.",
@@ -2280,10 +2280,10 @@ const QUESTIONS = [
     "module": 8,
     "question": "Which of the following statements indicate correct way of using a Natural Join?",
     "options": [
-      "SELECT department_id, department_name, location_id, city FROM departments d NATURAL JOIN locations l using (l.location_id);",
-      "SELECT department_id, department_name, location_id, city FROM departments NATURAL JOIN locations on (location_id);",
-      "SELECT department_id, department_name, location_id, city FROM departments NATURAL JOIN locations;",
-      "SELECT department_id, department_name, location_id, city FROM departments d NATURAL JOIN locations l WHERE d.location_id = l.location_id"
+      "SELECT department_id, department_name, location_id, city \nFROM departments d \nNATURAL JOIN locations l using (l.location_id);",
+      "SELECT department_id, department_name, location_id, city \nFROM departments \nNATURAL JOIN locations on (location_id);",
+      "SELECT department_id, department_name, location_id, city \nFROM departments \nNATURAL JOIN locations;",
+      "SELECT department_id, department_name, location_id, city \nFROM departments d \nNATURAL JOIN locations l WHERE d.location_id = l.location_id"
     ],
     "correctIndex": 2,
     "correctAnswer": "SELECT department_id, department_name, location_id, city FROM departments NATURAL JOIN locations;",
@@ -2310,7 +2310,7 @@ const QUESTIONS = [
     "module": 8,
     "question": "Which SQL statement produces the name, department name, and the city of all the employees who earn more than 10000?",
     "options": [
-      "SELECT emp_name, department_name, city FROM employees e, departments d, locations 1 JOIN ON (e.department_id = d.department id) AND (d.location_id =1.location_id) AND salary > 10000;",
+      "SELECT emp_name, department_name, city \nFROM employees e, departments d, locations 1 \nJOIN ON (e.department_id = d.department id) AND (d.location_id =1.location_id) AND salary > 10000;",
       "SELECT emp_name, department_name, city FROM employees e, departments d, locations 1 WHERE salary > 10000;",
       "SELECT emp_name, department_name, city FROM employees e JOIN departments d USING (department_id) JOIN locations 1 USING (location_id) WHERE salary > 10000;",
       "SELECT emp_name, department_name, city FROM employees e NATURAL JOIN departments, locations WHERE salary > 10000;"
@@ -2325,10 +2325,10 @@ const QUESTIONS = [
     "module": 8,
     "question": "You want to retrieve all employees, whether or not they have matching departments in the departments table. Which query would you use?",
     "options": [
-      "SELECT last_name, department_name FROM employees e LEFT OUTER JOIN departments d ON (e.department_id = d.department_id);",
-      "SELECT last_name, department_name FROM employees , departments(+);",
-      "SELECT last_name, department_name FROM employees JOIN departments (+);",
-      "SELECT last_name, department_name FROM employees e RIGHT OUTER JOIN departments d ON (e.department_id = d.department_id);"
+      "SELECT last_name, department_name \nFROM employees e \nLEFT OUTER JOIN departments d ON (e.department_id = d.department_id);",
+      "SELECT last_name, department_name \nFROM employees , departments(+);",
+      "SELECT last_name, department_name \nFROM employees \nJOIN departments (+);",
+      "SELECT last_name, department_name \nFROM employees e \nRIGHT OUTER JOIN departments d ON (e.department_id = d.department_id);"
     ],
     "correctIndex": 0,
     "correctAnswer": "SELECT last_name, department_name FROM employees e LEFT OUTER JOIN departments d ON (e.department_id = d.department_id);",
@@ -2458,7 +2458,7 @@ const QUESTIONS = [
   {
     "id": 160,
     "module": 8,
-    "question": "Which type of join is used in the following query? SELECT e.employee_id, e.last_name, d.department_id, d.location_id FROM employees e, departments d WHERE e.department_id = d.department_id;",
+    "question": "Which type of join is used in the following query? SELECT e.employee_id, e.last_name, d.department_id, d.location_id \nFROM employees e, departments d \nWHERE e.department_id = d.department_id;",
     "options": [
       "Self Join",
       "Non-equi Join",
