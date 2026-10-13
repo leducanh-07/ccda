@@ -1485,7 +1485,7 @@ const QUESTIONS = [
     "module": 5,
     "question": "You added a PHONE-NUMBER column of NUMBER data type to an existing EMPLOYEES table. The EMPLOYEES table already contains records of 100 employees. Now, you want to enter the phone numbers of each of the 100 employees into the table. Some of the employees may not have a phone number available. Which data manipulation operation do you perform?",
     "options": [
-      "PDATE",
+      "UPDATE",
       "MERGE",
       "INSERT",
       "ADD"
