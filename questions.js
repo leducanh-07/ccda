@@ -1491,7 +1491,7 @@ const QUESTIONS = [
       "ADD"
     ],
     "correctIndex": 0,
-    "correctAnswer": "PDATE",
+    "correctAnswer": "UPDATE",
     "explanation": "Updating existing rows with newly collected data values requires the UPDATE statement.",
     "hasSQL": true
   },

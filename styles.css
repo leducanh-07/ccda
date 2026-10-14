@@ -761,6 +761,15 @@ body {
   line-height: 1.7;
   margin-bottom: var(--space-6);
   color: var(--text-primary);
+  word-break: break-word;
+}
+
+.question-text p {
+  margin-bottom: var(--space-3);
+}
+
+.question-text p:last-child {
+  margin-bottom: 0;
 }
 
 /* --- SQL Code Block (Critical Styling) --- */
@@ -769,8 +778,8 @@ body {
   background: var(--code-bg);
   border: 1px solid var(--code-border);
   border-radius: var(--radius-md);
-  margin-top: 0;
-  margin-bottom: var(--space-2);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-3);
   overflow: hidden;
   font-family: var(--font-mono);
   font-size: 0.9rem;
@@ -801,6 +810,7 @@ body {
 .sql-line {
   display: flex;
   min-height: 1.7em;
+  align-items: flex-start;
 }
 
 .sql-line-num {
@@ -816,7 +826,8 @@ body {
 
 .sql-line-code {
   flex: 1;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
   color: var(--code-default);
 }
 
@@ -882,7 +893,13 @@ body {
 
 .option-text {
   flex: 1;
+  min-width: 0;
   padding-top: 4px;
+  word-break: break-word;
+}
+
+.option-text .sql-code-block {
+  margin: 0;
 }
 
 

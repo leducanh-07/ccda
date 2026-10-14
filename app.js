@@ -194,11 +194,26 @@ function retakeMistakesQuiz() {
   retakeMistakes();
 }
 
+function prepareQuestionOptions(q) {
+  const options = q.options.map((optText, origIdx) => ({
+    originalIndex: origIdx,
+    text: optText,
+    isCorrect: origIdx === q.correctIndex || optText.trim() === q.correctAnswer.trim()
+  }));
+  return shuffleArray(options);
+}
+
 function startQuiz(questions, moduleName, mode) {
+  const preparedQuestions = questions.map(q => {
+    const cloned = { ...q };
+    cloned.shuffledOptions = prepareQuestionOptions(cloned);
+    return cloned;
+  });
+
   quizState = {
-    questions,
+    questions: preparedQuestions,
     currentIndex: 0,
-    answers: new Array(questions.length).fill(null),
+    answers: new Array(preparedQuestions.length).fill(null),
     correctCount: 0,
     startTime: Date.now(),
     timerInterval: null,
@@ -217,20 +232,24 @@ function renderQuestion() {
   const total = quizState.questions.length;
   const num = quizState.currentIndex + 1;
   
+  if (!q.shuffledOptions) {
+    q.shuffledOptions = prepareQuestionOptions(q);
+  }
+  
   // Update progress
   document.getElementById('quizProgressText').textContent = `${num} / ${total}`;
   document.getElementById('quizProgressFill').style.width = `${(num / total) * 100}%`;
   document.getElementById('questionNumber').textContent = `Q${q.id}`;
   
-  // Render question text with SQL formatting
+  // Render question text with accurate SQL formatting
   document.getElementById('questionText').innerHTML = formatQuestionText(q.question);
   
-  // Render options
+  // Render shuffled options
   const letters = ['A', 'B', 'C', 'D'];
-  document.getElementById('optionsList').innerHTML = q.options.map((opt, i) => `
+  document.getElementById('optionsList').innerHTML = q.shuffledOptions.map((opt, i) => `
     <button class="option-btn" onclick="selectOption(${i})" id="opt${i}">
       <span class="option-letter">${letters[i]}</span>
-      <span class="option-text">${formatOptionText(opt)}</span>
+      <span class="option-text">${formatOptionText(opt.text)}</span>
     </button>
   `).join('');
   
@@ -241,7 +260,10 @@ function renderQuestion() {
 
 function selectOption(index) {
   const q = quizState.questions[quizState.currentIndex];
-  const isCorrect = index === q.correctIndex;
+  const selectedOpt = q.shuffledOptions[index];
+  const isCorrect = selectedOpt.isCorrect;
+  const correctIdx = q.shuffledOptions.findIndex(o => o.isCorrect);
+  const letters = ['A', 'B', 'C', 'D'];
   
   // Disable all options
   document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
@@ -250,12 +272,19 @@ function selectOption(index) {
   document.getElementById(`opt${index}`).classList.add(isCorrect ? 'correct' : 'wrong');
   
   // Always show correct answer
-  if (!isCorrect) {
-    document.getElementById(`opt${q.correctIndex}`).classList.add('correct');
+  if (!isCorrect && correctIdx >= 0) {
+    document.getElementById(`opt${correctIdx}`).classList.add('correct');
   }
   
   // Track answer
-  quizState.answers[quizState.currentIndex] = index;
+  quizState.answers[quizState.currentIndex] = {
+    selectedIndex: index,
+    selectedLetter: letters[index],
+    selectedText: selectedOpt.text,
+    correctLetter: letters[correctIdx >= 0 ? correctIdx : 0],
+    correctText: q.correctAnswer,
+    isCorrect: isCorrect
+  };
   if (isCorrect) quizState.correctCount++;
   
   // Save to progress
@@ -263,7 +292,7 @@ function selectOption(index) {
   
   // If wrong, save to mistakes
   if (!isCorrect) {
-    saveMistake(q.id, index);
+    saveMistake(q.id, selectedOpt.text);
   } else {
     removeMistake(q.id);
   }
@@ -289,7 +318,7 @@ function showExplanation(q, isCorrect) {
   title.style.color = isCorrect ? 'var(--success)' : 'var(--error)';
   
   document.getElementById('correctAnswerDisplay').innerHTML = 
-    `<strong>Correct Answer:</strong> ${escapeHTML(q.correctAnswer)}`;
+    `<strong>Correct Answer:</strong> ${formatOptionText(q.correctAnswer)}`;
   document.getElementById('explanationText').textContent = q.explanation;
   
   card.classList.remove('hidden');
@@ -384,18 +413,18 @@ function reviewAnswers() {
   const container = document.getElementById('resultsReview');
   container.classList.toggle('hidden');
   
-  if (!container.classList.contains('hidden') && container.innerHTML === '') {
+  if (!container.classList.contains('hidden')) {
     container.innerHTML = quizState.questions.map((q, i) => {
-      const userAnswer = quizState.answers[i];
-      const isCorrect = userAnswer === q.correctIndex;
-      const letters = ['A', 'B', 'C', 'D'];
+      const ans = quizState.answers[i];
+      if (!ans) return '';
+      const isCorrect = ans.isCorrect;
       return `
         <div class="review-item ${isCorrect ? 'review-correct' : 'review-wrong'}">
-          <div class="review-question">Q${q.id}: ${escapeHTML(q.question)}</div>
+          <div class="review-question">Q${q.id}: ${formatQuestionText(q.question)}</div>
           <div class="review-answer">
-            ${!isCorrect ? `<span style="color:var(--error)">Your answer: ${letters[userAnswer]}. ${escapeHTML(q.options[userAnswer] || 'N/A')}</span><br>` : ''}
-            <span style="color:var(--success)">Correct: ${letters[q.correctIndex]}. ${escapeHTML(q.options[q.correctIndex])}</span>
-            <br><em style="color:var(--text-tertiary);font-size:0.85rem">${escapeHTML(q.explanation)}</em>
+            ${!isCorrect ? `<div style="color:var(--error);margin-bottom:6px"><strong>Your answer (${ans.selectedLetter}):</strong> ${formatOptionText(ans.selectedText)}</div>` : ''}
+            <div style="color:var(--success);margin-bottom:6px"><strong>Correct answer (${ans.correctLetter}):</strong> ${formatOptionText(ans.correctText)}</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;margin-top:6px">${escapeHTML(q.explanation)}</div>
           </div>
         </div>
       `;
@@ -445,8 +474,7 @@ function renderFlashcard() {
   const card = flashcardState.cards[flashcardState.currentIndex];
   document.getElementById('flashcardFront').innerHTML = formatQuestionText(card.question);
   
-  const letters = ['A', 'B', 'C', 'D'];
-  let backHTML = `<div style="margin-bottom:12px"><strong style="color:var(--success)">Answer: ${letters[card.correctIndex]}. ${escapeHTML(card.correctAnswer)}</strong></div>`;
+  let backHTML = `<div style="margin-bottom:12px"><strong style="color:var(--success)">Answer:</strong> ${formatOptionText(card.correctAnswer)}</div>`;
   backHTML += `<div style="color:var(--text-secondary);font-size:0.9rem;text-align:left">${escapeHTML(card.explanation)}</div>`;
   document.getElementById('flashcardBack').innerHTML = backHTML;
   
@@ -492,22 +520,24 @@ function showMistakes() {
     empty.classList.add('hidden');
     document.getElementById('btnRetakeMistakes').classList.remove('hidden');
     
-    const letters = ['A', 'B', 'C', 'D'];
     list.innerHTML = mistakes.map(m => {
       const q = QUESTIONS.find(qItem => qItem.id === m.questionId);
       if (!q) return '';
       const mod = MODULES.find(mod => mod.id === q.module);
+      
+      const userText = m.selectedText || (m.selectedIndex !== undefined && q.options[m.selectedIndex] ? q.options[m.selectedIndex] : 'N/A');
+      
       return `
         <div class="mistake-item">
-          <div class="mistake-question">Q${q.id}: ${escapeHTML(q.question)}</div>
+          <div class="mistake-question">Q${q.id}: ${formatQuestionText(q.question)}</div>
           <div class="mistake-meta">
             <span>${mod ? mod.name : ''}</span>
           </div>
           <div style="margin-bottom:8px">
-            <span class="mistake-your-answer">Your: ${letters[m.selectedIndex]}. ${escapeHTML(q.options[m.selectedIndex] || 'N/A')}</span>
+            <span class="mistake-your-answer">Your Answer:</span> ${formatOptionText(userText)}
           </div>
           <div style="margin-bottom:8px">
-            <span class="mistake-correct-answer">Correct: ${letters[q.correctIndex]}. ${escapeHTML(q.options[q.correctIndex])}</span>
+            <span class="mistake-correct-answer">Correct Answer:</span> ${formatOptionText(q.correctAnswer)}
           </div>
           <div class="mistake-explanation">${escapeHTML(q.explanation)}</div>
         </div>
@@ -533,14 +563,18 @@ function getMistakes() {
   } catch { return []; }
 }
 
-function saveMistake(questionId, selectedIndex) {
+function saveMistake(questionId, selectedAnswerText) {
   const mistakes = getMistakes();
   const existing = mistakes.findIndex(m => m.questionId === questionId);
+  const data = {
+    questionId,
+    selectedText: selectedAnswerText,
+    timestamp: Date.now()
+  };
   if (existing >= 0) {
-    mistakes[existing].selectedIndex = selectedIndex;
-    mistakes[existing].timestamp = Date.now();
+    mistakes[existing] = data;
   } else {
-    mistakes.push({ questionId, selectedIndex, timestamp: Date.now() });
+    mistakes.push(data);
   }
   localStorage.setItem('dbms-mistakes', JSON.stringify(mistakes));
 }
@@ -621,36 +655,44 @@ const SQL_FUNCTIONS = [
 ];
 
 function highlightSQL(code) {
-  // Escape HTML first
+  // 1. Escape HTML
   let escaped = escapeHTML(code);
   
-  // Highlight strings (single quotes)
-  escaped = escaped.replace(/&#x27;([^&#]*?)&#x27;/g, '<span class="sql-string">\'$1\'</span>');
-  escaped = escaped.replace(/'([^']*?)'/g, '<span class="sql-string">\'$1\'</span>');
+  // 2. Protect strings & quoted aliases (single and double quotes)
+  const placeholders = [];
+  escaped = escaped.replace(/&#39;([^&#]*?)&#39;|&#x27;([^&#]*?)&#x27;|'([^']*?)'|&quot;([^&]*?)&quot;|"([^"]*?)"/g, (match) => {
+    const idx = placeholders.length;
+    placeholders.push(`<span class="sql-string">${match}</span>`);
+    return `___SQL_STR_TOKEN_${idx}___`;
+  });
   
-  // Highlight numbers
+  // 3. Highlight numbers
   escaped = escaped.replace(/\b(\d+\.?\d*)\b/g, '<span class="sql-number">$1</span>');
   
-  // Highlight functions
+  // 4. Highlight functions (name followed by open paren)
   SQL_FUNCTIONS.forEach(fn => {
     const regex = new RegExp('\\b(' + fn + ')\\s*\\(', 'gi');
     escaped = escaped.replace(regex, '<span class="sql-function">$1</span>(');
   });
   
-  // Highlight keywords (whole words)
+  // 5. Highlight keywords (standalone whole words)
   SQL_KEYWORDS.forEach(kw => {
     const regex = new RegExp('\\b(' + kw + ')\\b', 'gi');
     escaped = escaped.replace(regex, (match) => {
-      // Don't re-highlight if already inside a span
       return `<span class="sql-keyword">${match.toUpperCase()}</span>`;
     });
+  });
+  
+  // 6. Restore protected strings & aliases
+  placeholders.forEach((span, idx) => {
+    escaped = escaped.replace(`___SQL_STR_TOKEN_${idx}___`, span);
   });
   
   return escaped;
 }
 
 function createSQLBlock(code) {
-  const lines = code.split('\n').filter(l => l.trim());
+  const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const lineHTML = lines.map((line, i) => `
     <div class="sql-line">
       <span class="sql-line-num">${i + 1}</span>
@@ -667,77 +709,147 @@ function createSQLBlock(code) {
 }
 
 function beautifySQL(sql) {
-  // Replace multiple spaces with a single space
-  let formatted = sql.replace(/\s+/g, ' ').trim();
+  if (!sql) return '';
+  // Collapse excessive whitespace to single space
+  let s = sql.replace(/\s+/g, ' ').trim();
   
-  // Define keywords to break on
-  const breaks = [
-    'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 'HAVING',
-    'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 'FULL OUTER JOIN', 'INNER JOIN', 'CROSS JOIN', 'NATURAL JOIN', 'JOIN',
-    'UNION ALL', 'UNION', 'INTERSECT', 'MINUS', 'SET'
-  ];
+  // Multi-word clauses must be matched as whole atomic units so keywords like JOIN or BY are never split.
+  // Clauses that initiate a new line:
+  const clauseRegex = /\b(FROM|WHERE|(?:NATURAL\s+JOIN|CROSS\s+JOIN|INNER\s+JOIN|LEFT\s+OUTER\s+JOIN|LEFT\s+JOIN|RIGHT\s+OUTER\s+JOIN|RIGHT\s+JOIN|FULL\s+OUTER\s+JOIN|FULL\s+JOIN|JOIN)|GROUP\s+BY|HAVING|ORDER\s+BY|VALUES|SET|UNION\s+ALL|UNION|INTERSECT|MINUS|WHEN\s+MATCHED\s+THEN|WHEN\s+NOT\s+MATCHED\s+THEN)\b/gi;
   
-  // Add newlines before major clauses
-  breaks.forEach(keyword => {
-    const regex = new RegExp(`\\b(${keyword})\\b`, 'gi');
-    formatted = formatted.replace(regex, '\n$1');
+  let formatted = s.replace(clauseRegex, (match, clause, offset) => {
+    const normClause = clause.replace(/\s+/g, ' ').toUpperCase();
+    
+    // Check if FROM is inside a function call like TRIM('H' FROM 'HelloWorld') or EXTRACT(...)
+    if (normClause === 'FROM') {
+      const preceding = s.substring(0, offset);
+      const lastOpen = preceding.lastIndexOf('(');
+      const lastClose = preceding.lastIndexOf(')');
+      if (lastOpen > lastClose) {
+        const inside = preceding.substring(lastOpen + 1);
+        if (!/\bSELECT\b/i.test(inside)) {
+          return clause; // Inside function call: do not break
+        }
+      }
+    }
+    
+    // If this clause is at the start of the string, keep on line 1
+    if (offset === 0) {
+      return normClause;
+    }
+    
+    return '\n' + normClause;
   });
   
-  return formatted;
+  const lines = formatted.split('\n').map(l => l.trim()).filter(Boolean);
+  return lines.join('\n');
 }
 
 function formatQuestionText(text) {
-  let formatted = escapeHTML(text);
+  if (!text) return '';
   
-  // Find SQL-like code in the text
-  const sqlRegex = /((?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|TRUNCATE\s+TABLE|MERGE\s+INTO)\s+[^.]*?;?(?=\s*(?:How|What|Which|Why|For|The|You|This|Evaluate|Examine|$)))/gi;
+  // Regex to detect true standalone executable SQL queries in question stems
+  // Must end with ';'
+  // Must not be an English phrase like "a SELECT statement" or "Which SELECT statement"
+  const sqlQueryRegex = /\b(SELECT(?!\s+(?:statement|clause|query))\s+[\s\S]+?\bFROM\b[\s\S]+?;|INSERT\s+INTO\s+[\s\S]+?;|UPDATE\s+\w+[\s\S]+?\bSET\b[\s\S]+?;|DELETE(?!\s+(?:statement|clause|query))\s+(?:FROM\s+)?\w+[\s\S]*?;|CREATE\s+(?:OR\s+REPLACE\s+)?(?:TABLE|VIEW)\s+[\s\S]+?;|ALTER\s+TABLE\s+[\s\S]+?;|TRUNCATE\s+TABLE\s+[\s\S]+?;|MERGE\s+INTO\s+[\s\S]+?;)/gi;
   
-  const matches = text.match(sqlRegex);
-  if (matches && matches.length > 0) {
-    matches.forEach(match => {
-      const escapedMatch = escapeHTML(match);
-      const beautified = beautifySQL(match);
-      const sqlBlock = createSQLBlock(beautified);
-      formatted = formatted.replace(escapedMatch, sqlBlock);
-    });
+  const matches = [];
+  let m;
+  while ((m = sqlQueryRegex.exec(text)) !== null) {
+    const matched = m[1].trim();
+    const start = m.index;
+    const preceding = text.substring(0, start).trim();
+    // Verify preceding word isn't an article introducing a noun phrase
+    if (!/\b(which|a|an|the|every)\s*$/i.test(preceding)) {
+      matches.push({ start, end: start + m[1].length, sql: matched });
+    }
   }
   
-  // Also format inline SQL code
-  formatted = formatted.replace(
-    /(?<!<[^>]*)(\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM|CREATE TABLE|ALTER TABLE|DROP TABLE)\b\s+\S+(?:\s+\S+){0,40}?;)/gi,
-    (match) => {
-      if (match.includes('sql-code-block')) return match;
-      return createSQLBlock(beautifySQL(match));
-    }
-  );
+  if (matches.length === 0) {
+    // Pure plain text question: render as standard readable text paragraph
+    return `<p>${escapeHTML(text)}</p>`;
+  }
   
-  return formatted;
+  // Reconstruct the question with 100% of surrounding text fully preserved
+  let htmlResult = '';
+  let lastIndex = 0;
+  
+  for (const item of matches) {
+    if (item.start > lastIndex) {
+      const preText = text.substring(lastIndex, item.start).trim();
+      if (preText) {
+        htmlResult += `<p>${escapeHTML(preText)}</p>`;
+      }
+    }
+    const beautified = beautifySQL(item.sql);
+    htmlResult += createSQLBlock(beautified);
+    lastIndex = item.end;
+  }
+  
+  if (lastIndex < text.length) {
+    const postText = text.substring(lastIndex).trim();
+    if (postText) {
+      htmlResult += `<p>${escapeHTML(postText)}</p>`;
+    }
+  }
+  
+  return htmlResult;
+}
+
+function isSQLOption(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.trim();
+  
+  // Reject plain English explanations mentioning SQL keywords
+  if (/^(?:A\s+|The\s+|Which\s+)?(?:MERGE|UPDATE|DELETE|INSERT|SELECT|CREATE|ALTER|DROP|TRUNCATE)\s+(?:can|will|is|are|should|may|must|does|statement|clause|operation|command)\b/i.test(t)) {
+    return false;
+  }
+  if (/\b(?:will\s+delete|will\s+add|can\s+update|can\s+be\s+used|statement\s+replaces|statement\s+is\s+used)\b/i.test(t)) {
+    return false;
+  }
+  
+  // Match executable SQL statements
+  const sqlPatterns = [
+    /^\s*SELECT(?!\s+(?:statement|clause|query))\b[\s\S]+?\bFROM\b/i,
+    /^\s*SELECT(?!\s+(?:statement|clause|query))\b[\s\S]+?;?$/i,
+    /^\s*INSERT\s+INTO\b/i,
+    /^\s*UPDATE\s+\w+\s+SET\b/i,
+    /^\s*DELETE\s+(?:FROM\s+)?\w+/i,
+    /^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:TABLE|VIEW)\b/i,
+    /^\s*ALTER\s+TABLE\b/i,
+    /^\s*DROP\s+(?:TABLE|VIEW)\b/i,
+    /^\s*TRUNCATE\s+TABLE\b/i,
+    /^\s*MERGE\s+INTO\b/i
+  ];
+  
+  return sqlPatterns.some(pat => pat.test(t));
 }
 
 function formatOptionText(text) {
-  const sqlStarters = ['SELECT ', 'INSERT ', 'UPDATE ', 'DELETE ', 'CREATE ', 'ALTER ', 'DROP ', 'TRUNCATE ', 'MERGE '];
-  const startsWithSQL = sqlStarters.some(s => text.trim().toUpperCase().startsWith(s));
-  
-  if (startsWithSQL && text.length > 15) {
+  if (isSQLOption(text)) {
     return createSQLBlock(beautifySQL(text));
   }
-  
   return escapeHTML(text);
 }
 
 // ─── Utilities ─────────────────────────────────
 function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return arr;
+  return copy;
 }
 
 // ─── Keyboard Navigation ──────────────────────
